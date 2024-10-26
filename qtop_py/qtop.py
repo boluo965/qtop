@@ -27,14 +27,12 @@ import re
 import json
 import datetime
 from collections import namedtuple, OrderedDict, Counter
-import os
 from os.path import realpath
 from signal import signal, SIGPIPE, SIG_DFL
 import termios
 import contextlib
 import glob
 import tempfile
-import sys
 import logging
 from qtop_py.constants import SYSTEMCONFDIR, QTOPCONF_YAML, QTOP_LOGFILE, USERPATH, MAX_CORE_ALLOWED, MAX_UNIX_ACCOUNTS, KEYPRESS_TIMEOUT, FALLBACK_TERMSIZE
 from qtop_py import fileutils
