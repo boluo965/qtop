@@ -42,13 +42,16 @@ The proposed regression flow is:
 1. Keep small unit tests in `tests/test_pbs_sample_regressions.py` for each crash class, so ordinary CI catches the logic regressions quickly.
 2. Use `tools/validate_pbs_samples.py` for the larger archived PBS sweep. It renders samples with colour enabled, writes `.ans` files, and records a manifest under the selected output directory.
 3. Run `make test-pbs-samples` in jobs that have access to the external archived sample repository. This avoids vendoring the large historical trace corpus into `qtop`, while still making the regression sweep reproducible.
-4. If maintainers want golden-output checks later, the `.ans` files written by the helper can be promoted to selected fixtures and compared after normalising volatile fields such as timestamps and log paths.
+4. The helper now forces a curated 10-sample golden set into the rendered output before filling the remaining slots. The set includes large-cluster samples from the review discussion, so `PBS_SAMPLE_LIMIT=10 make test-pbs-samples` validates exactly those golden outputs.
 
 ## Local validation commands
 
 ```bash
 python3 -m pytest tests/test_pbs_sample_regressions.py -q
+python3 tools/validate_pbs_samples.py ../qtop-test-repo/qtop5/results --limit 10 --output /tmp/qtop-pbs-golden-10
 python3 tools/validate_pbs_samples.py ../qtop-test-repo/qtop5/results --limit 100 --output /tmp/qtop-pbs-rendered-100
 ```
+
+Observed local golden-output check after this patch: `validated=10 output=/tmp/qtop-pbs-golden-10`.
 
 Observed local sample sweep after this patch: `validated=100 output=/tmp/qtop-pbs-rendered-100`.
