@@ -34,6 +34,7 @@ import contextlib
 import glob
 import tempfile
 import logging
+from ast import literal_eval
 from qtop_py.constants import SYSTEMCONFDIR, QTOPCONF_YAML, QTOP_LOGFILE, USERPATH, MAX_CORE_ALLOWED, MAX_UNIX_ACCOUNTS, KEYPRESS_TIMEOUT, FALLBACK_TERMSIZE
 from qtop_py import fileutils
 from qtop_py import utils
@@ -78,6 +79,13 @@ def compress_colored_line(s):
     for color, seq in zip(colors, sts):
         final_t.append(color + "".join(seq) + "\x1b[0;m")
     return "".join(final_t)
+
+
+def literal_config_value(value):
+    try:
+        return literal_eval(value)
+    except (ValueError, SyntaxError, TypeError):
+        return value
 
 
 def gauge_core_vectors(core_user_map, print_char_start, print_char_stop, coreline_notthere_or_unused, non_existent_symbol, remove_corelines):
@@ -231,8 +239,8 @@ def load_yaml_config():
     config["savepath"] = _savepath
 
     for key in ("transpose_wn_matrices", "fill_with_user_firstletter", "faster_xml_parsing", "vertical_separator_every_X_columns", "overwrite_sample_file"):
-        config[key] = eval(config[key])  # TODO config should not be writeable!!
-    config["sorting"]["reverse"] = eval(config["sorting"].get("reverse", "0"))  # TODO config should not be writeable!!
+        config[key] = literal_config_value(config[key])  # TODO config should not be writeable!!
+    config["sorting"]["reverse"] = literal_config_value(config["sorting"].get("reverse", "0"))  # TODO config should not be writeable!!
     config["ALT_LABEL_COLORS"] = yaml.fix_config_list(config["workernodes_matrix"][0]["wn id lines"]["alt_label_colors"])
     config["SEPARATOR"] = config["vertical_separator"].replace("'", "")
     config["USER_CUT_MATRIX_WIDTH"] = int(config["workernodes_matrix"][0]["wn id lines"]["user_cut_matrix_width"])
