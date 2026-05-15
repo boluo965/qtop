@@ -12,7 +12,6 @@ import pytest
 import re
 import datetime
 import sys
-from types import SimpleNamespace
 from qtop_py.qtop import WNOccupancy, decide_batch_system, load_yaml_config, JobNotFound, SchedulerNotSpecified, NoSchedulerFound, get_date_obj_from_str
 
 
@@ -22,6 +21,9 @@ def config():
 
 
 def test_load_yaml_config_does_not_execute_config_values(monkeypatch, tmp_path):
+    class Args:
+        CONFFILE = None
+
     sentinel = tmp_path / "executed"
     dangerous_value = "__import__('pathlib').Path(%r).touch()" % str(sentinel)
 
@@ -49,7 +51,7 @@ def test_load_yaml_config_does_not_execute_config_values(monkeypatch, tmp_path):
     monkeypatch.setattr(qtop, "QTOPPATH", str(tmp_path), raising=False)
     monkeypatch.setattr(qtop, "SYSTEMCONFDIR", str(tmp_path / "system"))
     monkeypatch.setattr(qtop, "USERPATH", str(tmp_path / "user"))
-    monkeypatch.setattr(qtop, "args", SimpleNamespace(CONFFILE=None), raising=False)
+    monkeypatch.setattr(qtop, "args", Args(), raising=False)
 
     config, _, _ = load_yaml_config()
 
