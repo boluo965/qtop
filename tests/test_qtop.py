@@ -20,6 +20,47 @@ def config():
     return {}
 
 
+def test_load_yaml_config_does_not_execute_config_values(monkeypatch, tmp_path):
+    class Args:
+        CONFFILE = None
+
+    sentinel = tmp_path / "executed"
+    dangerous_value = "__import__('pathlib').Path(%r).touch()" % str(sentinel)
+
+    def parse_config(_path):
+        return {
+            "possible_ids": "01",
+            "user_color_mappings": [{"alice": "Blue"}],
+            "nodestate_color_mappings": [{"au": "BlackOnRed"}],
+            "remapping": [],
+            "savepath": str(tmp_path / "qtop-results"),
+            "scheduler": "pbs",
+            "transpose_wn_matrices": "True",
+            "fill_with_user_firstletter": "False",
+            "faster_xml_parsing": "False",
+            "vertical_separator_every_X_columns": "0",
+            "overwrite_sample_file": dangerous_value,
+            "sorting": {"reverse": "False"},
+            "workernodes_matrix": [{"wn id lines": {"alt_label_colors": ["White, Blue_L"], "user_cut_matrix_width": "0"}}],
+            "vertical_separator": "'|'",
+        }
+
+    import qtop_py.qtop as qtop
+
+    monkeypatch.setattr(qtop.yaml, "parse", parse_config)
+    monkeypatch.setattr(qtop, "QTOPPATH", str(tmp_path), raising=False)
+    monkeypatch.setattr(qtop, "SYSTEMCONFDIR", str(tmp_path / "system"))
+    monkeypatch.setattr(qtop, "USERPATH", str(tmp_path / "user"))
+    monkeypatch.setattr(qtop, "args", Args(), raising=False)
+
+    config, _, _ = load_yaml_config()
+
+    assert config["transpose_wn_matrices"] is True
+    assert config["vertical_separator_every_X_columns"] == 0
+    assert config["overwrite_sample_file"] == dangerous_value
+    assert not sentinel.exists()
+
+
 @pytest.mark.parametrize(
     "domain_name, match",
     (
