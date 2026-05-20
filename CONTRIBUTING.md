@@ -28,6 +28,16 @@ You may contribute in the following ways:
 * Help with outreach and onboard new contributors by assisting them directly
 * Write and/or lead collaborations proposals, including grants or other fundraising or help with community efforts
 
+## Branching And Release Flow
+
+Please keep the branch flow lightweight:
+
+- Open ordinary feature, fix, documentation, and challenge PRs against `develop`.
+- Keep `main` for reviewed release-ready snapshots.
+- Use short-lived topic branches named after the issue or change, for example `fix-327-branching-docs`.
+- Use `releases/*` branches only when preparing or stabilizing a release.
+- Keep release notes in the PR body until the maintainer decides they belong in `CHANGELOG.rst`.
+
 [1] https://wiki.linuxfoundation.org/dco
 
 [2] https://developercertificate.org/
