@@ -57,7 +57,7 @@ invoking it in demo mode:
     ./qtop.py -b demo
 
 When used, the ``-b`` switch must always be followed by one of the
-supported batch systems (as of version 0.8.9, pbs, sge, oar, demo).
+supported batch systems (pbs, sge, oar, slurm, demo).
 
 That should create and destroy fictional jobs in fictional machines from
 fictional users, and display all that in a colorful, yet much unhelpful
@@ -84,7 +84,7 @@ Demo case study
 ---------------
 
 Use demo mode when you want to learn qtop's display without access to a
-live PBS, SGE, or OAR cluster. The demo backend generates fictional
+live PBS, SGE, OAR, or Slurm cluster. The demo backend generates fictional
 worker nodes, jobs, queues, and users, so it is useful for checking the
 layout and keyboard workflow before pointing qtop at production
 scheduler data.
@@ -439,6 +439,9 @@ Scheduler configuration area
             oarstat_file: %(savepath)s/oarstat%(pid)s.txt, oarstat
           sge:
             sge_file: %(savepath)s/qstat%(pid)s.F.xml.stdout, qstat -F -xml -u '*'
+          slurm:
+            squeue_file: %(savepath)s/squeue%(pid)s.txt, squeue -h -o %%i|%%u|%%t|%%P|%%C|%%N
+            sinfo_file: %(savepath)s/sinfo%(pid)s.txt, sinfo -N -h -o %%N|%%P|%%t|%%c
           demo:
             demo_file: %(savepath)s/demo%(pid)s.txt, echo 'Demo here'
     ---
@@ -478,6 +481,16 @@ qtop will search for ``oarnodes_s_Y.txt``, ``oarnodes_Y.txt`` and
 ``oarstat.txt`` in ``<path-to-cluster-information>`` (retrieved by you,
 earlier).
 
+For Slurm, qtop expects saved ``squeue`` and ``sinfo`` command traces
+matching the configured commands. For example:
+
+::
+
+    ./qtop.py -b slurm -s <path-to-slurm-command-traces>
+
+qtop will search for ``squeue.txt`` and ``sinfo.txt`` in
+``<path-to-slurm-command-traces>``.
+
 qtop also has a scheduler-type discovery system, meaning it will try to
 guess which scheduler system is installed in your system. The keys below
 let the user decide which command it should be that uniquely
@@ -492,6 +505,7 @@ installed.
           pbs: pbsnodes
           oar: oarnodes
           sge: qacct
+          slurm: sinfo
           demo: echo
     ---
 
@@ -606,7 +620,7 @@ Input selection
 ~~~~~~~~~~~~~~~
 
 -  ``-b SYSTEM`` selects the scheduler backend. Common values are
-   ``demo``, ``pbs``, ``sge``, and ``oar``.
+   ``demo``, ``pbs``, ``sge``, ``oar``, and ``slurm``.
 -  ``-s DIRECTORY`` reads scheduler output files from ``DIRECTORY``
    instead of running scheduler commands live.
 -  ``-f FILE`` uses a custom qtop configuration file.
@@ -658,7 +672,7 @@ Usage tips
 
 -  Start with ``./qtop -b demo`` when testing terminal size, color, or
    keyboard navigation. It avoids accidental scheduler calls.
--  On a live cluster, pass ``-b pbs``, ``-b sge``, or ``-b oar`` when
+-  On a live cluster, pass ``-b pbs``, ``-b sge``, ``-b oar``, or ``-b slurm`` when
    auto-detection is not enough.
 -  Use ``-s`` when another process has already collected scheduler
    output files. This is helpful for debugging and for reproducing an
