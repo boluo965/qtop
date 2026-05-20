@@ -541,13 +541,13 @@ def control_qtop(viewport, read_char, cluster, new_attrs):
 
         dynamic_config["user_sort"] = []
         while True:
-            sort_choice = raw_input(
+            sort_choice = input(
                 "\nChoose sorting order, or Enter to exit:-> ",
             )
             if not sort_choice:
                 break
             if custom_choice in sort_choice:
-                custom = raw_input("\nType in custom sorting (python RegEx, for examples check configuration file): ")
+                custom = input("\nType in custom sorting (python RegEx, for examples check configuration file): ")
                 sort_map[custom_choice][1].append(custom)
 
             try:
@@ -606,7 +606,7 @@ def control_qtop(viewport, read_char, cluster, new_attrs):
 
         dynamic_config["filtering"] = []
         while True:
-            filter_choice = raw_input(
+            filter_choice = input(
                 "\nChoose Filter command, or Enter to exit:-> ",
             )
             if not filter_choice:
@@ -622,7 +622,7 @@ def control_qtop(viewport, read_char, cluster, new_attrs):
 
             filter_args = []
             while True:
-                user_input = raw_input("\nEnter argument, or Enter to exit:-> ")
+                user_input = input("\nEnter argument, or Enter to exit:-> ")
                 if not user_input:
                     break
                 filter_args.append(user_input)
@@ -660,7 +660,7 @@ def control_qtop(viewport, read_char, cluster, new_attrs):
 
         dynamic_config["highlight"] = []
         while True:
-            filter_choice = raw_input(
+            filter_choice = input(
                 "\nChoose Highlight command, or Enter to exit:-> ",
             )
             if not filter_choice:
@@ -676,7 +676,7 @@ def control_qtop(viewport, read_char, cluster, new_attrs):
 
             filter_args = []
             while True:
-                user_input = raw_input("\nEnter argument, or Enter to exit:-> ")
+                user_input = input("\nEnter argument, or Enter to exit:-> ")
                 if not user_input:
                     break
                 filter_args.append(user_input)
