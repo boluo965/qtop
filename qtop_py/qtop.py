@@ -961,16 +961,15 @@ class WNOccupancy(object):
     def _create_sort_acct_jobs_table(self, user_job_per_state_counts, user_all_jobs_sorted, user_to_id):
         """Calculates what is actually below the id|  jobs>=R + Q | unix account etc line"""
         account_jobs_table = []
-        for user_alljobs in user_all_jobs_sorted:
-            user, alljobs_of_user = user_alljobs
+        for user_name, total_jobs_for_user in user_all_jobs_sorted:
             account_jobs_table.append(
                 [
-                    user_to_id[user],
-                    user_job_per_state_counts["running_of_user"][user],
-                    user_job_per_state_counts["queued_of_user"][user],
-                    alljobs_of_user,
-                    user,
-                    self.user_machine_use[user],
+                    user_to_id[user_name],
+                    user_job_per_state_counts["running_of_user"][user_name],
+                    user_job_per_state_counts["queued_of_user"][user_name],
+                    total_jobs_for_user,
+                    user_name,
+                    self.user_machine_use[user_name],
                 ]
             )
         account_jobs_table.sort(key=itemgetter(3, 4), reverse=True)  # sort by All jobs, then unix account
@@ -981,19 +980,21 @@ class WNOccupancy(object):
         counting of e.g. R, Q, C, W, E attached to each user
         """
         user_job_per_state_counts = dict()
-        for state_of_user in state_abbrevs.values():
-            user_job_per_state_counts[state_of_user] = dict()
+        for state_count_key in state_abbrevs.values():
+            user_job_per_state_counts[state_count_key] = dict()
 
         for user_name, job_state in zip(user_names, job_states):
             try:
-                x_of_user = state_abbrevs[job_state]
+                state_count_key = state_abbrevs[job_state]
             except KeyError:
                 raise JobNotFound(job_state)
 
-            user_job_per_state_counts[x_of_user][user_name] = user_job_per_state_counts[x_of_user].get(user_name, 0) + 1
+            user_job_per_state_counts[state_count_key][user_name] = user_job_per_state_counts[state_count_key].get(user_name, 0) + 1
 
         for user_name in user_job_per_state_counts["running_of_user"]:
-            [user_job_per_state_counts[x_of_user].setdefault(user_name, 0) for x_of_user in user_job_per_state_counts if x_of_user != "running_of_user"]
+            for state_count_key in user_job_per_state_counts:
+                if state_count_key != "running_of_user":
+                    user_job_per_state_counts[state_count_key].setdefault(user_name, 0)
 
         return user_job_per_state_counts
 
@@ -1024,9 +1025,10 @@ class WNOccupancy(object):
         except JobNotFound as e:
             logging.critical("Job state %s not found. You may wish to add " "that node state inside %s in state_abbreviations section.\n" % (e.job_state, QTOPCONF_YAML))
 
-        for state_abbrev, state_of_user in state_abbrevs.items():
-            missing_uids = set(user_to_id).difference(user_job_per_state_counts[state_of_user])
-            [user_job_per_state_counts[state_of_user].setdefault(missing_uid, 0) for missing_uid in missing_uids]
+        for state_count_key in state_abbrevs.values():
+            missing_user_ids = set(user_to_id).difference(user_job_per_state_counts[state_count_key])
+            for missing_user_id in missing_user_ids:
+                user_job_per_state_counts[state_count_key].setdefault(missing_user_id, 0)
 
         return user_job_per_state_counts
 
