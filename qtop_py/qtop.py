@@ -1573,7 +1573,6 @@ class TextDisplay(object):
                 colorize(num_of_nodes, pattern=userid_pat),
                 sep=colorize(config["SEPARATOR"], pattern=userid_pat),
                 width1=1 + conditional_width,
-                width3=3 + conditional_width,
                 width4=4 + conditional_width,
                 width5=5 + conditional_width,
                 width18=18 + conditional_width,
