@@ -4,6 +4,7 @@ qtop.py guide
 -  `Introduction <#introduction>`__
 -  `Quickstart <#quickstart>`__
 -  `Demo case study <#demo-case-study>`__
+-  `Bundled scheduler case studies <#bundled-scheduler-case-studies>`__
 -  `Output walkthrough <#output-walkthrough>`__
 -  `Watchmode <#watch-mode>`__
 -  `Instant Replay <#instant-replay>`__
@@ -123,6 +124,20 @@ For an interactive session, use watch mode. The optional value after
 While in watch mode, the movement keys from `Keyboard
 shortcuts <#keyboard-shortcuts>`__ let you move through the matrix,
 transpose it, switch node ID display, apply filters, or quit.
+
+Bundled scheduler case studies
+------------------------------
+
+The ``qtop_py/contrib`` directory contains captured scheduler snapshots
+for quick checks without access to a live cluster:
+
+::
+
+    ./qtop -s qtop_py/contrib -c ON -Fadvv -b sge
+    ./qtop -s qtop_py/contrib -c ON -Frdvvv -b oar
+    ./qtop -s qtop_py/contrib -c ON -raF -b pbs
+
+Use ``-s`` for saved scheduler files and ``-b`` for the matching parser.
 
 Output walkthrough
 ------------------

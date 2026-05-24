@@ -156,6 +156,7 @@ def read_yaml_config_block(line, fin, get_lines):
     parent_container = block
     open_containers = list()
     open_containers.append(block)
+    key_value = {}
 
     # if len(line) > 1:  # non-empty line
     #     key_value, parent_container = process_line(line, fin, get_lines, parent_container)
@@ -171,7 +172,7 @@ def read_yaml_config_block(line, fin, get_lines):
     while len(line) > 1:  # as long as a blank line is not reached (i.e. block is not complete)
         # if line[0] == 0 or (line[0] != 0 and line[1] == '-'):  # same level
         # key_value used below belongs to previous line. It will work for first block line because of short circuit logic
-        if line[0] == 0 or (line[0] == 1 and (next(iter(key_value)) == "-")) or (line[0] == -1 and line[1] == "-"):  # same level or entry level
+        if line[0] == 0 or (line[0] == 1 and key_value and (next(iter(key_value)) == "-")) or (line[0] == -1 and line[1] == "-"):  # same level or entry level
             key_value, container = process_line(line, fin, get_lines, parent_container)
             for k in key_value:
                 pass  # assign dict's sole key to k
