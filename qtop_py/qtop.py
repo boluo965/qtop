@@ -16,8 +16,6 @@
 
 import sys
 
-here = sys.path[0]
-
 from operator import itemgetter
 from itertools import zip_longest, cycle, chain
 import subprocess
@@ -35,10 +33,10 @@ import glob
 import tempfile
 import logging
 from ast import literal_eval
-from qtop_py.constants import SYSTEMCONFDIR, QTOPCONF_YAML, QTOP_LOGFILE, USERPATH, MAX_CORE_ALLOWED, MAX_UNIX_ACCOUNTS, KEYPRESS_TIMEOUT, FALLBACK_TERMSIZE
+from qtop_py.constants import SYSTEMCONFDIR, QTOPCONF_YAML, QTOP_LOGFILE, USERPATH, MAX_UNIX_ACCOUNTS, KEYPRESS_TIMEOUT, FALLBACK_TERMSIZE
 from qtop_py import fileutils
 from qtop_py import utils
-from qtop_py.plugins import *
+from qtop_py.plugins import *  # noqa: F403  ## FIXME: this is a code-smell, because it can be tightened
 from math import ceil
 from qtop_py.colormap import user_to_color_default, color_to_code, queue_to_color, nodestate_to_color_default
 import qtop_py.yaml_parser as yaml
@@ -47,6 +45,8 @@ from qtop_py.serialiser import GenericBatchSystem
 from qtop_py.web import Web
 from qtop_py import __version__
 import time
+
+here = sys.path[0]
 
 
 # TODO make the following work with py files instead of qtop.colormap files
@@ -140,7 +140,7 @@ def raw_mode(file):
         if args.WATCH:
             try:
                 old_attrs = termios.tcgetattr(file.fileno())
-            except:
+            except:  # noqa: E722  ## FIXME, ruff complaint
                 yield
             else:
                 new_attrs = old_attrs[:]
@@ -790,7 +790,7 @@ def attempt_faster_xml_parsing(config):
             from lxml import etree
         except ImportError:
             logging.warn('Module lxml is missing. Try issuing "pip install lxml". Reverting to xml module.')
-            from xml.etree import ElementTree as etree
+            from xml.etree import ElementTree as etree  # noqa: F401
 
 
 def init_dirs(args, _savepath):
@@ -1170,7 +1170,7 @@ class WNOccupancy(object):
             web.stop()
             sys.exit(1)
         min_len = min(user_max_len, real_max_len)
-        max_len = max(user_max_len, real_max_len)
+        max_len = max(user_max_len, real_max_len)  # noqa: F841  ## FIXME, max_len unused
         if real_max_len > user_max_len:
             logging.warn("Some longer %(attr)ss have been cropped due to %(attr)s length restriction by user" % {"attr": part_name})
 
@@ -1496,7 +1496,7 @@ class TextDisplay(object):
 
         print("%(queues)s :" % {"queues": colorize("Queues", "Cyan_L")}, end=" ")
         for _queue_name, q_tuple in qstatq_lod.items():
-            q_running_jobs, q_queued_jobs, q_state = q_tuple.run, q_tuple.queued, q_tuple.state
+            q_running_jobs, q_queued_jobs, q_state = q_tuple.run, q_tuple.queued, q_tuple.state  # noqa: F841  ## FIXME, q_state unused
             account = _queue_name if _queue_name in queue_to_color else "account_not_colored"
             print(
                 "{qname}{star}: {run} {q}|".format(
@@ -1591,7 +1591,7 @@ class TextDisplay(object):
 
         wn_vert_labels = wns_occupancy.wn_vert_labels
         core_user_map = wns_occupancy.core_user_map
-        extra_matrices_nr = wns_occupancy.extra_matrices_nr
+        extra_matrices_nr = wns_occupancy.extra_matrices_nr  # noqa: F841  ## FIXME, unused
         userid_to_userid_re_pat = wns_occupancy.userid_to_userid_re_pat
         mapping = config["core_coloring"]
 
@@ -2328,7 +2328,7 @@ def main():
     available_batch_systems = discover_qtop_batch_systems()
 
     stdout = sys.stdout  # keep a copy of the initial value of sys.stdout
-    change_mapping = cycle([("queue_to_color", "color by queue"), ("user_to_color", "color by user")])
+    change_mapping = cycle([("queue_to_color", "color by queue"), ("user_to_color", "color by user")])  # noqa: F841  ## FIXME or explain: change_mapping unused
     h_counter = cycle([0, 1])
 
     viewport = Viewport()  # controls the part of the qtop matrix shown on screen
