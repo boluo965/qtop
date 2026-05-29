@@ -8,6 +8,11 @@ include qtopconf.yaml
 include qtop
 include README.md
 include ROADMAP.rst
+include .gitlab-ci.yml
+recursive-include .github/workflows *.yml
+recursive-include docs *.md *.rst *.png
+recursive-include tools *.py
 
 recursive-include qtop_py *.py *.sh *.jdl *.html *.txt *.ref *.gif *.stdout
 recursive-include tests *.py
+recursive-include tests/plugins/slurm_samples *.txt
