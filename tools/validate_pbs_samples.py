@@ -28,6 +28,10 @@ GOLDEN_PBS_SAMPLES = (
 
 
 def _tail(text, lines=5):
+    if text is None:
+        text = ""
+    elif isinstance(text, bytes):
+        text = text.decode("utf-8", "replace")
     return text.splitlines()[-lines:]
 
 
