@@ -8,8 +8,9 @@ make ci
 ```
 
 That target runs unit tests, the fast committed scheduler sample gate, and the
-fortification checks. GitHub Actions and GitLab CI call the same target so the
-meaning of a failure is the same on both platforms.
+fortification checks. The PR-triggered GitHub `build-qtop` workflow and GitLab
+CI call the same target so the meaning of a failure is the same on both
+platforms.
 
 Provider-specific aliases such as `make github-ci`, `make gitlab-ci`,
 `make github-build`, and `make gitlab-build` deliberately resolve back to the
@@ -19,6 +20,11 @@ actual validation contract remains local and reviewable.
 The GitHub Actions workflows pin third-party actions to full commit SHAs and
 set `permissions: contents: read`, because the jobs only need repository read
 access plus artifact upload.
+
+`.github/workflows/build.yml` carries the PR-facing modern Python, AlmaLinux 8,
+and build lanes. `.github/workflows/pytest.yml` stays as a manual
+`workflow_dispatch` pytest check so the historical workflow path remains
+available without duplicating the full PR gate.
 
 Python packages installed by CI, including transitive helper packages, are
 pinned in `requirements-ci.txt`; both GitHub Actions and GitLab CI install from
