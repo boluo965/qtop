@@ -537,9 +537,6 @@ def control_qtop(viewport, read_char, cluster, new_attrs):
         sort_map["5"] = ("sort by node state", [])
         sort_map["6"] = ("sort by nr of cores", [])
         sort_map["7"] = ("sort by core occupancy", [])
-        sort_map["8"] = ("sort by custom definition", [])
-
-        custom_choice = "8"
 
         print(
             "Type in sort order. This can be a single number or a sequence of numbers,\n"
@@ -559,9 +556,6 @@ def control_qtop(viewport, read_char, cluster, new_attrs):
             )
             if not sort_choice:
                 break
-            if custom_choice in sort_choice:
-                custom = input("\nType in custom sorting (python RegEx, for examples check configuration file): ")
-                sort_map[custom_choice][1].append(custom)
 
             try:
                 sort_order = [m for m in sort_choice]
@@ -2109,7 +2103,7 @@ class Cluster(object):
         try:
             self.worker_nodes.sort(key=sort_key, reverse=self.config["sorting"]["reverse"])
         except (IndexError, ValueError):
-            logging.critical("There's (probably) something wrong in your sorting lambda in %s." % QTOPCONF_YAML)
+            logging.critical("There's (probably) something wrong in your sorting configuration in %s." % QTOPCONF_YAML)
             raise
         except KeyError as e:
             msg = "Worker Nodes don't contain '%s' as a key." % str(e)

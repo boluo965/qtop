@@ -105,6 +105,18 @@ def test_sort_worker_nodes_uses_named_sort_keys(monkeypatch):
     assert [node["domainname"] for node in cluster._sort_worker_nodes()] == ["node2", "node10"]
 
 
+def test_sort_worker_nodes_rejects_custom_python_sorting(monkeypatch):
+    import qtop_py.qtop as qtop
+
+    monkeypatch.setattr(qtop, "dynamic_config", {}, raising=False)
+    cluster = qtop.Cluster.__new__(qtop.Cluster)
+    cluster.config = {"sorting": {"user_sort": ["sort by custom definition"], "reverse": False}}
+    cluster.worker_nodes = [{"domainname": "node1", "state": "-", "np": "1", "core_job_map": {}}]
+
+    with pytest.raises(ValueError, match="custom Python sorting expressions"):
+        cluster._sort_worker_nodes()
+
+
 @pytest.mark.parametrize(
     "domain_name, match",
     (
