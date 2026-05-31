@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+##
+## qtop is a tool to monitor queuing systems - https://github.com/qtop/qtop
+##
+## Copyright (c) 2026 Jacob Hatchett
+##
+## SPDX-License-Identifier: MIT
+##
+
 """Diff and source-health checks used by local and CI validation."""
 
 import argparse

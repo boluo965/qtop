@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help test sample-gate test-pbs-samples test-slurm-samples fortifications compat-py36 ci build confirm
+.PHONY: help test coverage sample-gate test-pbs-samples test-slurm-samples fortifications compat-py36 ci build dist version confirm
 
 PYTHON ?= python3
 SAMPLE_GATE_SCHEDULERS ?= pbs,sge,slurm
@@ -23,6 +23,10 @@ help: ## Show this help
 test: ## Run the Python test suite
 	$(PYTHON) -m pytest
 
+coverage: ## Run tests with coverage.py and print a terminal report
+	$(PYTHON) -m coverage run -m pytest
+	$(PYTHON) -m coverage report
+
 sample-gate: ## Run fast committed PBS/SGE/SLURM qtop sample gates
 	$(PYTHON) tools/validate_scheduler_samples.py --schedulers $(SAMPLE_GATE_SCHEDULERS) --max-failures $(SAMPLE_GATE_MAX_FAILURES) --artifact-dir $(SAMPLE_GATE_ARTIFACT_DIR)
 
@@ -43,7 +47,12 @@ compat-py36: ## Run dependency-light Python 3.6 compatibility checks
 ci: test sample-gate fortifications ## Run the shared local/CI validation path
 
 build: ## Build source and wheel distributions
-	$(PYTHON) -m build
+	$(PYTHON) -m build --no-isolation
+
+dist: build ## Alias for build, matching common release target names
+
+version: ## Print the package version
+	$(PYTHON) -c "import qtop_py; print(qtop_py.__version__)"
 
 confirm: ## Ask for human confirmation before release-like tasks
 	@echo "Are you sure? [y/N]" && read ans && [ $${ans:-N} = y ]

@@ -11,9 +11,15 @@ That target runs unit tests, the fast committed scheduler sample gate, and the
 fortification checks. GitHub Actions and GitLab CI call the same target so the
 meaning of a failure is the same on both platforms.
 
-The GitHub Actions workflow pins third-party actions to full commit SHAs and
+The GitHub Actions workflows pin third-party actions to full commit SHAs and
 sets `permissions: contents: read`, because the jobs only need repository read
 access plus artifact upload.
+
+Python packages installed by CI, including transitive helper packages, are
+pinned in `requirements-ci.txt`; both GitHub Actions and GitLab CI install from
+that same file before calling the Makefile targets. `make build` uses
+`python -m build --no-isolation` so the build backend also comes from those
+pinned CI requirements instead of being resolved dynamically during the build.
 
 ## Fast committed sample gate
 
@@ -82,6 +88,28 @@ count exceeds the configured budget. The command writes `manifest.json`,
 
 The generated/binary path check is deliberately conservative because
 `CONTRIBUTING.md` asks contributors not to store heavy artifacts in `qtop`.
+
+## Coverage roadmap
+
+The Makefile exposes:
+
+```bash
+make coverage
+```
+
+That target runs `coverage.py` through the same `PYTHON` override used by the
+other targets. To enable coverage in CI without changing the abstraction,
+install `requirements-ci.txt` and insert `make coverage` in the modern Python
+job after `make ci`, then publish `coverage xml` or terminal summary artifacts
+from the workflow. The AlmaLinux 8 / Python 3.6 lane should stay
+dependency-light and continue to run `make compat-py36`.
+
+## Develop / CONTRIBUTING.md alignment
+
+Rechecked on 2026-05-31 against `origin/develop` and the current
+`CONTRIBUTING.md`: the PR targets `develop`, keeps generated screenshots and
+logs as CI artifacts rather than repository files, uses DCO signed commits, and
+documents the AI-assisted validation surface in the pull request body.
 
 ## Independent structure reference
 
