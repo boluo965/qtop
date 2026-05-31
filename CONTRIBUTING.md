@@ -13,27 +13,6 @@ However:
 
 If AI assistance materially contributed to a change, disclose it briefly in the pull request description.
 
-## Validation
-
-Before opening a pull request, run the shared validation entry point:
-
-```sh
-make ci
-```
-
-This runs the Python test suite, renders the committed PBS/SGE/SLURM sample
-gate, and checks the diff for review hazards such as control characters,
-generated-looking artifacts, and Python `eval()` call sites. GitHub Actions and
-GitLab CI call the same Makefile target to avoid coverage drift.
-
-For Python 3.6 / RHEL8-style compatibility evidence, run:
-
-```sh
-make compat-py36 PYTHON=python3
-```
-
-For the larger archived PBS corpus, see `docs/ci-sample-gates.md`.
-
 ## General Conventions
 
 Please follow common conventions for Open Source projects, f.i. align to Electron framework if still in doubt:
