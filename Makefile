@@ -8,7 +8,7 @@ SAMPLE_GATE_SCHEDULERS ?= pbs,sge,slurm
 SAMPLE_GATE_MAX_FAILURES ?= 0
 SAMPLE_GATE_ARTIFACT_DIR ?= artifacts/sample-gate
 PBS_SAMPLES_DIR ?= ../qtop-test-repo/qtop5/results
-PBS_SAMPLE_LIMIT ?= 100
+PBS_SAMPLE_LIMIT ?= 447
 PBS_OUTPUT_DIR ?= /tmp/qtop-pbs-rendered
 SLURM_SAMPLES_DIR ?= tests/plugins/slurm_samples
 SLURM_OUTPUT_DIR ?= /tmp/qtop-slurm-rendered
@@ -44,7 +44,7 @@ fortifications: ## Check diff health and reject eval() call sites
 ruff-check: ## Run ruff against the source tree
 	$(PYTHON) -m ruff check .
 
-lint: fortifications ## Run dependency-light source and diff health checks
+lint: ruff-check ## Run dependency-light source and diff health checks
 
 format-check: ## Check the branch diff for whitespace errors
 	git diff --check $(FORTIFY_BASE_REF)...HEAD
