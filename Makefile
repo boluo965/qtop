@@ -44,7 +44,7 @@ fortifications: ## Check diff health and reject eval() call sites
 ruff-check: ## Run ruff against the source tree
 	$(PYTHON) -m ruff check .
 
-lint: ruff-check ## Run dependency-light source and diff health checks
+lint: fortifications ## Run dependency-light source and diff health checks
 
 format-check: ## Check the branch diff for whitespace errors
 	git diff --check $(FORTIFY_BASE_REF)...HEAD
