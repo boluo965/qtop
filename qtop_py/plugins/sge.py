@@ -1,3 +1,13 @@
+##
+## qtop is a tool to monitor queuing systems - https://github.com/qtop/qtop
+##
+## Copyright (c) 2016 Fotis Georgatos
+## Copyright (c) 2016 Sotiris Fragkiskos
+## Copyright (c) 2026 Jacob Hatchett
+##
+## SPDX-License-Identifier: MIT
+##
+
 __author__ = "sfranky"
 try:
     import ujson as json
@@ -132,7 +142,7 @@ class SGEBatchSystem(GenericBatchSystem):
         # TODO: check validity. 'state' shouldnt just be 'Q'!
         logging.debug("Closing %s" % self.sge_file)
 
-        return total_running_jobs, int(eval(str(total_queued_jobs))), qstatq_list
+        return total_running_jobs, int(total_queued_jobs), qstatq_list
 
     def get_worker_nodes(self, job_ids, job_queues, options):
         logging.debug("Parsing tree of %s" % self.sge_file)

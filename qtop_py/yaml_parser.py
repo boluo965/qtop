@@ -4,6 +4,7 @@
 ## Copyright (c) 2016 Fotis Georgatos
 ## Copyright (c) 2016 Sotiris Fragkiskos
 ## Copyright (c) 2023 Hewlett Packard Enterprise Development LP
+## Copyright (c) 2026 Jacob Hatchett
 ##
 ## SPDX-License-Identifier: MIT
 ##
@@ -116,9 +117,6 @@ def convert_dash_key_in_dict(d):
             for key_in in d[key_out]:
                 if key_in == "-" and key_out != "state":
                     d[key_out] = d[key_out][key_in]
-                # elif key_in == '-' and key_out == 'state':
-                #     d[key_out] = eval(d[key_out])
-                #     break
         except TypeError:
             return d
         except IndexError:

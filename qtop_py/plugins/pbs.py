@@ -4,6 +4,7 @@
 ## Copyright (c) 2016 Fotis Georgatos
 ## Copyright (c) 2016 Sotiris Fragkiskos
 ## Copyright (c) 2023 Hewlett Packard Enterprise Development LP
+## Copyright (c) 2026 Jacob Hatchett
 ##
 ## SPDX-License-Identifier: MIT
 ##
@@ -317,7 +318,7 @@ class PBSBatchSystem(GenericBatchSystem):
         else:
             total_running_jobs, total_queued_jobs = 0, 0
 
-        return int(eval(str(total_running_jobs))), int(eval(str(total_queued_jobs))), qstatq_list
+        return int(total_running_jobs), int(total_queued_jobs), qstatq_list
 
     @staticmethod
     def _get_jobs_cores(jobs):  # block['jobs']
