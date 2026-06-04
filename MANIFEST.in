@@ -15,5 +15,4 @@ recursive-include docs *.md *.rst *.png
 recursive-include tools *.py
 
 recursive-include qtop_py *.py *.sh *.jdl *.html *.txt *.ref *.gif *.stdout
-recursive-include tests *.py
-recursive-include tests/plugins/slurm_samples *.txt
+recursive-include tests *.py *.txt
