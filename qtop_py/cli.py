@@ -17,7 +17,12 @@ def cli_main():
     try:
         return main() or 0
     except SchedulerNotSpecified:
-        sys.stderr.write("No scheduler could be auto-detected. " "Select one with -b/--batchSystem, QTOP_SCHEDULER, or qtopconf.yaml.\n")
+        # fmt: off
+        sys.stderr.write(
+            "No scheduler could be auto-detected. "
+            "Select one with -b/--batchSystem, QTOP_SCHEDULER, or qtopconf.yaml.\n"
+        )
+        # fmt: on
         return 1
     except (InvalidScheduler, NoSchedulerFound) as exc:
         if str(exc):

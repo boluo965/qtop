@@ -20,13 +20,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTROL_OR_BIDI = re.compile(r"[^\x09\x0a\x0d\x20-\x7e]|\u202a|\u202b|\u202c|\u202d|\u202e|\u2066|\u2067|\u2068|\u2069")
-# fmt: off
-GENERATED_OR_BINARY_PATTERN = (
+GENERATED_OR_BINARY = re.compile(
     r"(^|/)(m4|autogen|configure|Makefile\.in|cmake|tests?/files|fixtures?)/|"
-    r"\.(xz|lzma|gz|bin|dat|png|jpg|jpeg|gif|webp)$"
+    r"\.(xz|lzma|gz|bin|dat|png|jpg|jpeg|gif|webp)$",
+    re.IGNORECASE,
 )
-# fmt: on
-GENERATED_OR_BINARY = re.compile(GENERATED_OR_BINARY_PATTERN, re.IGNORECASE)
 SKIP_DIRS = set([".git", ".tox", ".venv", "venv", "__pycache__", "artifacts", "build", "dist", "qtop.egg-info"])
 
 

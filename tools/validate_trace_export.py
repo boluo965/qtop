@@ -2,7 +2,7 @@
 ##
 ## qtop is a tool to monitor queuing systems - https://github.com/qtop/qtop
 ##
-## Copyright (c) 2026 Jacob Hatchett
+## Copyright (c) 2026 Nicola Trozzi
 ##
 ## SPDX-License-Identifier: MIT
 ##
@@ -96,7 +96,7 @@ def render_document(document, show_account_totals=False, color="OFF", term_heigh
     qtop.QTOPPATH = str(ROOT)
     qtop.QTOPCONF_YAML = "qtopconf.yaml"
     qtop.QTOP_LOGFILE = os.path.join(tempfile.gettempdir(), "qtop_trace_export.log")
-    qtop.SAMPLE_FILENAME = "qtop_trace_export_sample.tar"
+    qtop.SAMPLE_FILENAME = "qtop_trace_export_sample.tar.gz"
     qtop.dynamic_config = {"force_names": 1}
     qtop.scheduler = "slurm"
 

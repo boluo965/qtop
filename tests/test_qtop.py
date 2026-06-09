@@ -15,6 +15,7 @@ import datetime
 import sys
 from qtop_py import qtop as qtop_module
 from qtop_py import utils as qtop_utils
+from qtop_py.constants import LONG_TAIL_USER_SYMBOL, UNKNOWN_NODE_STATE_SYMBOL
 from qtop_py.qtop import (
     WNOccupancy,
     decide_batch_system,
@@ -24,6 +25,33 @@ from qtop_py.qtop import (
     get_date_obj_from_str,
     TextDisplay,
 )
+
+SYMBOL_NON_EXISTENT_NODE = "#"
+SYMBOL_SEPARATOR = "|"
+SYMBOL_UNUSED_CORE = "_"
+SYMBOL_LONG_TAIL_USER = LONG_TAIL_USER_SYMBOL
+SYMBOL_UNKNOWN_NODE_STATE = UNKNOWN_NODE_STATE_SYMBOL
+SYMBOL_POSSIBLE_IDS_WITH_RESERVED = [
+    "0",
+    SYMBOL_NON_EXISTENT_NODE,
+    SYMBOL_UNUSED_CORE,
+    SYMBOL_LONG_TAIL_USER,
+    SYMBOL_UNKNOWN_NODE_STATE,
+    "1",
+    SYMBOL_SEPARATOR,
+]
+
+
+def user_symbol_config(fill_with_user_firstletter=None, possible_ids=None):
+    config = {
+        "non_existent_node_symbol": SYMBOL_NON_EXISTENT_NODE,
+        "SEPARATOR": SYMBOL_SEPARATOR,
+    }
+    if fill_with_user_firstletter is not None:
+        config["fill_with_user_firstletter"] = fill_with_user_firstletter
+    if possible_ids is not None:
+        config["possible_ids"] = possible_ids
+    return config
 
 
 @pytest.fixture
@@ -206,23 +234,17 @@ def test_display_user_accounts_pool_mappings_hides_totals_by_default(monkeypatch
 
 
 def test_available_possible_ids_filters_reserved_user_symbols():
-    config = {
-        "possible_ids": list("0#_*?1|"),
-        "non_existent_node_symbol": "#",
-        "SEPARATOR": "|",
-    }
+    config = user_symbol_config(possible_ids=SYMBOL_POSSIBLE_IDS_WITH_RESERVED)
 
     assert qtop_module._available_possible_ids(config) == ["0", "1"]
 
 
 def test_user_symbols_use_asterisk_for_long_tail_users():
     wns_occupancy = WNOccupancy.__new__(WNOccupancy)
-    wns_occupancy.config = {
-        "fill_with_user_firstletter": False,
-        "possible_ids": ["0", "#", "_", "*", "?", "1"],
-        "non_existent_node_symbol": "#",
-        "SEPARATOR": "|",
-    }
+    wns_occupancy.config = user_symbol_config(
+        fill_with_user_firstletter=False,
+        possible_ids=SYMBOL_POSSIBLE_IDS_WITH_RESERVED[:-1],
+    )
 
     user_lot = [
         ("alice", 4),
@@ -232,38 +254,33 @@ def test_user_symbols_use_asterisk_for_long_tail_users():
     ]
     user_to_id = wns_occupancy._create_id_for_users(user_lot)
 
-    assert [str(user_to_id[user]) for user, _ in user_lot] == ["0", "1", "*", "*"]
+    assert [str(user_to_id[user]) for user, _ in user_lot] == ["0", "1", SYMBOL_LONG_TAIL_USER, SYMBOL_LONG_TAIL_USER]
 
 
 def test_firstletter_user_symbols_do_not_reuse_reserved_markers():
     wns_occupancy = WNOccupancy.__new__(WNOccupancy)
-    wns_occupancy.config = {
-        "fill_with_user_firstletter": True,
-        "possible_ids": ["0", "1"],
-        "non_existent_node_symbol": "#",
-        "SEPARATOR": "|",
-    }
+    wns_occupancy.config = user_symbol_config(fill_with_user_firstletter=True, possible_ids=["0", "1"])
 
     user_lot = [
-        ("_hidden", 4),
-        ("#system", 3),
-        ("?unknown", 2),
-        ("*wildcard", 1),
+        (SYMBOL_UNUSED_CORE + "hidden", 4),
+        (SYMBOL_NON_EXISTENT_NODE + "system", 3),
+        (SYMBOL_UNKNOWN_NODE_STATE + "unknown", 2),
+        (SYMBOL_LONG_TAIL_USER + "wildcard", 1),
         ("alice", 1),
     ]
     user_to_id = wns_occupancy._create_id_for_users(user_lot)
 
-    assert str(user_to_id["_hidden"]) == "*"
-    assert str(user_to_id["#system"]) == "*"
-    assert str(user_to_id["?unknown"]) == "*"
-    assert str(user_to_id["*wildcard"]) == "*"
+    assert str(user_to_id[SYMBOL_UNUSED_CORE + "hidden"]) == SYMBOL_LONG_TAIL_USER
+    assert str(user_to_id[SYMBOL_NON_EXISTENT_NODE + "system"]) == SYMBOL_LONG_TAIL_USER
+    assert str(user_to_id[SYMBOL_UNKNOWN_NODE_STATE + "unknown"]) == SYMBOL_LONG_TAIL_USER
+    assert str(user_to_id[SYMBOL_LONG_TAIL_USER + "wildcard"]) == SYMBOL_LONG_TAIL_USER
     assert str(user_to_id["alice"]) == "a"
 
 
 def test_account_jobs_table_preserves_precomputed_user_symbols():
     wns_occupancy = WNOccupancy.__new__(WNOccupancy)
     user_to_id = {
-        "overflow": qtop_utils.ColorStr("*"),
+        "overflow": qtop_utils.ColorStr(SYMBOL_LONG_TAIL_USER),
         "alice": qtop_utils.ColorStr("0"),
     }
     account_jobs_table = [
@@ -273,31 +290,28 @@ def test_account_jobs_table_preserves_precomputed_user_symbols():
 
     account_jobs_table, user_to_id = wns_occupancy._create_account_jobs_table(user_to_id, account_jobs_table)
 
-    assert str(account_jobs_table[0][0]) == "*"
+    assert str(account_jobs_table[0][0]) == SYMBOL_LONG_TAIL_USER
     assert account_jobs_table[0][0].color == "Red_L"
     assert str(account_jobs_table[1][0]) == "0"
     assert account_jobs_table[1][0].color == "Red_L"
-    assert str(user_to_id["overflow"]) == "*"
+    assert str(user_to_id["overflow"]) == SYMBOL_LONG_TAIL_USER
 
 
 def test_long_tail_symbol_is_not_colored_like_a_single_user():
     wns_occupancy = WNOccupancy.__new__(WNOccupancy)
-    wns_occupancy.config = {
-        "non_existent_node_symbol": "#",
-        "SEPARATOR": "|",
-    }
+    wns_occupancy.config = user_symbol_config()
     wns_occupancy.account_jobs_table = [
         [qtop_utils.ColorStr("0"), 1, 0, 1, "alice", 1],
-        [qtop_utils.ColorStr("*"), 1, 0, 1, "overflow", 1],
+        [qtop_utils.ColorStr(SYMBOL_LONG_TAIL_USER), 1, 0, 1, "overflow", 1],
     ]
 
     pattern = wns_occupancy.make_pattern_out_of_mapping({"alice": "Red_L"})
 
     assert pattern["0"] == "alice"
-    assert pattern["*"] == "account_not_colored"
-    assert pattern["#"] == "#"
-    assert pattern["_"] == "_"
-    assert pattern["|"] == "account_not_colored"
+    assert pattern[SYMBOL_LONG_TAIL_USER] == "account_not_colored"
+    assert pattern[SYMBOL_NON_EXISTENT_NODE] == SYMBOL_NON_EXISTENT_NODE
+    assert pattern[SYMBOL_UNUSED_CORE] == SYMBOL_UNUSED_CORE
+    assert pattern[SYMBOL_SEPARATOR] == "account_not_colored"
 
 
 @pytest.mark.parametrize(

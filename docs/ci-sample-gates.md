@@ -129,7 +129,7 @@ Expected output rules for this branch:
 - the colour-on trace artifact must not render `_`, `#`, or `?` as user-account
   identifiers after ANSI sequences are stripped for review
 - `-4` / `--accounttotals` currently adds the account totals row; it must not
-  change the meaning of user symbols or alter sections 1 and 2
+  change the meaning of user symbols or alter prior sections
 
 ## Python 3.6 / AlmaLinux 8 gate
 

@@ -34,7 +34,16 @@ import glob
 import tempfile
 import logging
 from ast import literal_eval
-from qtop_py.constants import SYSTEMCONFDIR, QTOPCONF_YAML, QTOP_LOGFILE, USERPATH, KEYPRESS_TIMEOUT, FALLBACK_TERMSIZE
+from qtop_py.constants import (
+    SYSTEMCONFDIR,
+    QTOPCONF_YAML,
+    QTOP_LOGFILE,
+    USERPATH,
+    KEYPRESS_TIMEOUT,
+    FALLBACK_TERMSIZE,
+    LONG_TAIL_USER_SYMBOL,
+    UNKNOWN_NODE_STATE_SYMBOL,
+)
 from qtop_py import fileutils
 from qtop_py import utils
 from qtop_py.plugins.demo import DemoBatchSystem
@@ -52,8 +61,6 @@ import time
 
 here = sys.path[0]
 PLUGIN_BATCH_SYSTEMS = (DemoBatchSystem, OARBatchSystem, PBSBatchSystem, SGEBatchSystem, SlurmBatchSystem)
-LONG_TAIL_USER_SYMBOL = "*"
-UNKNOWN_NODE_STATE_SYMBOL = "?"
 
 
 def _configured_separator(config):
