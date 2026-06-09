@@ -82,6 +82,20 @@ make backend-colour-artifacts
 Both use the same implementation and fail on any backend regression. This
 keeps validation logic out of provider-specific CI YAML.
 
+## Clean reruns
+
+`make all` runs the local validation and build path. The optional archived PBS
+sample sweep is skipped with an explanatory message when the external corpus is
+not present. To remove generated artifacts, caches, and build output before
+repeating that path, use:
+
+```bash
+printf 'y\n' | make rerun
+```
+
+The destructive `clean` target requires `confirm`, so an accidental
+`make clean` does not silently remove local artifacts.
+
 ## Issue #483 trace and symbol contract
 
 Issue #483 links a cluster trace for replay review. Decode or inspect any trace
@@ -95,9 +109,9 @@ make trace-export-validation TRACE_JSON_B64=/path/to/qtop_json.json.b64 TRACE_FU
 ```
 
 This target decodes `base64 -> gzip -> JSON`, rehydrates the exported qtop
-document, renders it locally, checks the account-symbol contract, checks that
-`-4` / `--accounttotals` adds the totals row, and writes generated artifacts
-under `artifacts/trace-export/`.
+document, renders it locally, checks the account-symbol contract in both plain
+and colour-on output, checks that `-4` / `--accounttotals` adds the totals row,
+and writes generated artifacts under `artifacts/trace-export/`.
 
 Expected output rules for this branch:
 
@@ -112,6 +126,8 @@ Expected output rules for this branch:
   user initials
 - `*` is displayed without mapping it to one specific user's colour rule,
   because it represents a grouped tail rather than a single account
+- the colour-on trace artifact must not render `_`, `#`, or `?` as user-account
+  identifiers after ANSI sequences are stripped for review
 - `-4` / `--accounttotals` currently adds the account totals row; it must not
   change the meaning of user symbols or alter sections 1 and 2
 
@@ -141,8 +157,8 @@ The generated/binary path check is deliberately conservative because
 `make lint` keeps the dependency-light source and diff health checks available
 without installing Python packages, `make ruff-check` runs the repository's ruff
 configuration after `make ci-deps` has installed pinned CI dependencies, and
-`make format-check` checks whitespace errors in the branch diff against the
-same `FORTIFY_BASE_REF`.
+`make format-check` runs `ruff format --check .` before checking whitespace
+errors in the branch diff against the same `FORTIFY_BASE_REF`.
 
 ## Coverage roadmap
 

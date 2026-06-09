@@ -44,6 +44,7 @@ def test_sort_worker_nodes_uses_named_sort_keys(monkeypatch):
 
     assert [node["domainname"] for node in cluster._sort_worker_nodes()] == ["node2", "node10"]
 
+
 def test_sort_worker_nodes_rejects_custom_python_sorting(monkeypatch):
     import qtop_py.qtop as qtop
 
@@ -124,7 +125,7 @@ def test_create_user_job_counts_raises_jobnotfound():  # user_names, job_states,
 
     document = Document()
     wns_occupancy = WNOccupancy(None, None, document, None, None)
-    with pytest.raises(JobNotFound) as e:  # noqa: F841  ## FIXME
+    with pytest.raises(JobNotFound):
         wns_occupancy._create_user_job_counts(user_names, job_states, state_abbrevs) == {
             "cancelled_of_user": {"sotiris": 0, "yannis": 0, "petros": 1},
             "exiting_of_user": {"sotiris": 0, "kostas": 1, "yannis": 0},
@@ -347,7 +348,7 @@ def test_get_selected_batch_system_raises_scheduler_not_specified(
     available_batch_systems = {"sge": None, "oar": None, "pbs": None}
     config = {"signature_commands": {"pbs": "pbsnodes", "oar": "oarnodes", "sge": "qhost", "demo": "echo"}}
 
-    with pytest.raises(SchedulerNotSpecified) as e:  # noqa: F841  ## FIXME
+    with pytest.raises(SchedulerNotSpecified):
         decide_batch_system(
             cmdline_switch,
             env_var,
@@ -373,7 +374,7 @@ def test_get_selected_batch_system_raises_no_scheduler_found(
 ):
     schedulers = ["sge", "oar", "pbs"]
     available_batch_systems = {"sge": None, "oar": None, "pbs": None}
-    with pytest.raises(NoSchedulerFound) as e:  # noqa: F841  ## FIXME
+    with pytest.raises(NoSchedulerFound):
         decide_batch_system(
             cmdline_switch,
             env_var,
@@ -387,8 +388,16 @@ def test_get_selected_batch_system_raises_no_scheduler_found(
 @pytest.mark.parametrize(
     "s, now, day_meant",
     (
-        ("21:00", datetime.datetime(year=2016, month=11, day=20, hour=1, minute=10, second=0), datetime.datetime(year=2016, month=11, day=19, hour=20, minute=10, second=0).day),
-        ("21:00", datetime.datetime(year=2016, month=11, day=20, hour=22, minute=10, second=0), datetime.datetime(year=2016, month=11, day=20, hour=20, minute=10, second=0).day),
+        (
+            "21:00",
+            datetime.datetime(year=2016, month=11, day=20, hour=1, minute=10, second=0),
+            datetime.datetime(year=2016, month=11, day=19, hour=20, minute=10, second=0).day,
+        ),
+        (
+            "21:00",
+            datetime.datetime(year=2016, month=11, day=20, hour=22, minute=10, second=0),
+            datetime.datetime(year=2016, month=11, day=20, hour=20, minute=10, second=0).day,
+        ),
     ),
 )
 def test_get_date_obj_from_str(s, now, day_meant):

@@ -38,7 +38,4 @@ lint.ignore = ["I001"]  ## FIXME, ruff has a point
 target-version = "py37" ## FIXME, pin the ruff that is known to be compatible on rhel6 w. python3.6 and adjust
 
 ## FG customisations
-line-length = 188 # this is temporary measure,to reduce noise over line lengths
-
-[tool.ruff.lint.per-file-ignores]
-"qtop_py/qtop.py" = ["F405"]  ## FIXME, ruff has a point
+line-length = 180 # keep legacy output fixtures readable while reducing the previous 188-char ceiling

@@ -16,6 +16,7 @@ import gzip
 import io
 import json
 import os
+import re
 import sys
 import tempfile
 from collections import OrderedDict, namedtuple
@@ -29,6 +30,9 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 import qtop_py.qtop as qtop  # noqa: E402
+
+ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+ACCOUNT_LINE_RE = re.compile(r"^\[\s*(.)\]\s+(.+?)\s+\|")
 
 
 def decode_trace_payload(path):
@@ -51,9 +55,9 @@ def load_exported_document(path):
     return qtop.Document(worker_nodes, jobs_dict, queues_dict, total_running_jobs, total_queued_jobs)
 
 
-def qtop_args(show_account_totals=False):
+def qtop_args(show_account_totals=False, color="OFF"):
     return SimpleNamespace(
-        COLOR="OFF",
+        COLOR=color,
         CLASSIC=False,
         WATCH=False,
         SAMPLE=False,
@@ -86,8 +90,8 @@ def qtop_args(show_account_totals=False):
     )
 
 
-def render_document(document, show_account_totals=False, term_height=1000, term_columns=220):
-    args = qtop_args(show_account_totals=show_account_totals)
+def render_document(document, show_account_totals=False, color="OFF", term_height=1000, term_columns=220):
+    args = qtop_args(show_account_totals=show_account_totals, color=color)
     qtop.args = args
     qtop.QTOPPATH = str(ROOT)
     qtop.QTOPCONF_YAML = "qtopconf.yaml"
@@ -135,6 +139,26 @@ def validate_symbol_contract(symbols):
         raise ValueError("long-tail account symbol '*' was not exercised by the trace")
 
 
+def strip_ansi(text):
+    return ANSI_RE.sub("", text)
+
+
+def rendered_account_symbols(rendered):
+    symbols = []
+    for line in strip_ansi(rendered).splitlines():
+        match = ACCOUNT_LINE_RE.match(line)
+        if match:
+            symbols.append(match.group(1))
+    return symbols
+
+
+def validate_rendered_account_symbols(rendered):
+    symbols = rendered_account_symbols(rendered)
+    if not symbols:
+        raise ValueError("rendered output did not include account-symbol mapping lines")
+    validate_symbol_contract(symbols)
+
+
 def extract_summary_line(text):
     for line in text.splitlines():
         if line.startswith("Summary:"):
@@ -162,9 +186,12 @@ def main():
     document = load_exported_document(args.trace_json_b64)
     rendered, wns_occupancy = render_document(document)
     rendered_with_totals, _ = render_document(document, show_account_totals=True)
+    rendered_color, wns_occupancy_color = render_document(document, color="ON")
 
     symbols = account_symbols(wns_occupancy)
     validate_symbol_contract(symbols)
+    validate_symbol_contract(account_symbols(wns_occupancy_color))
+    validate_rendered_account_symbols(rendered_color)
     if "[ T] Totals" not in rendered_with_totals:
         raise ValueError("-4/accounttotals rendering did not include the totals row")
     if args.fullview:
@@ -174,6 +201,8 @@ def main():
     artifact_dir.mkdir(parents=True, exist_ok=True)
     (artifact_dir / "rendered.out").write_text(rendered)
     (artifact_dir / "rendered-accounttotals.out").write_text(rendered_with_totals)
+    (artifact_dir / "rendered-color.ans").write_text(rendered_color)
+    (artifact_dir / "rendered-color.out").write_text(strip_ansi(rendered_color))
     (artifact_dir / "summary.json").write_text(
         json.dumps(
             {
@@ -183,6 +212,8 @@ def main():
                 "total_running_jobs": document.total_running_jobs,
                 "total_queued_jobs": document.total_queued_jobs,
                 "account_symbols": sorted(set(symbols)),
+                "color_account_symbols": sorted(set(rendered_account_symbols(rendered_color))),
+                "rendered_color_has_ansi": "\x1b[" in rendered_color,
             },
             indent=2,
             sort_keys=True,

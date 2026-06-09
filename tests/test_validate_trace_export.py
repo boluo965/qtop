@@ -4,7 +4,14 @@ import json
 
 import pytest
 
-from tools.validate_trace_export import account_symbols, load_exported_document, validate_symbol_contract
+from tools.validate_trace_export import (
+    account_symbols,
+    load_exported_document,
+    rendered_account_symbols,
+    strip_ansi,
+    validate_rendered_account_symbols,
+    validate_symbol_contract,
+)
 
 
 def write_encoded_payload(tmp_path, payload):
@@ -45,3 +52,18 @@ def test_validate_symbol_contract_accepts_long_tail_without_reserved_symbols():
 def test_validate_symbol_contract_rejects_reserved_account_symbols(reserved):
     with pytest.raises(ValueError, match="reserved symbols"):
         validate_symbol_contract(["0", reserved, "*"])
+
+
+def test_rendered_account_symbols_strip_colour_sequences():
+    rendered = "\x1b[31m[ *]\x1b[0m t_anon_user_104   |   2      2      0 |     2 |"
+
+    assert strip_ansi(rendered) == "[ *] t_anon_user_104   |   2      2      0 |     2 |"
+    assert rendered_account_symbols(rendered) == ["*"]
+
+
+@pytest.mark.parametrize("reserved", ["_", "#", "?"])
+def test_validate_rendered_account_symbols_rejects_reserved_symbols(reserved):
+    rendered = "[ %s] t_anon_user_104   |   2      2      0 |     2 |" % reserved
+
+    with pytest.raises(ValueError, match="reserved symbols"):
+        validate_rendered_account_symbols(rendered)

@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help ci-deps test coverage sample-gate backend-validation backend-colour-artifacts render-backends trace-export-validation test-pbs-samples test-slurm-samples fortifications ruff-check lint lint-fix format-check format-fix compat-py36 ci github-ci gitlab-ci build github-build gitlab-build dist version confirm
+.PHONY: help all rerun clean ci-deps test coverage sample-gate backend-validation backend-colour-artifacts render-backends trace-export-validation test-pbs-samples test-slurm-samples fortifications ruff-check lint lint-fix format-check format-fix compat-py36 ci github-ci gitlab-ci build github-build gitlab-build dist version confirm
 
 PYTHON ?= python3
 PIP ?= $(PYTHON) -m pip
@@ -21,6 +21,15 @@ FORTIFY_BASE_REF ?= origin/develop
 help: ## Show this help
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
 		| awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+
+all: ci-deps test coverage backend-validation backend-colour-artifacts render-backends trace-export-validation test-pbs-samples test-slurm-samples fortifications ruff-check lint format-check compat-py36 ci github-ci gitlab-ci build github-build gitlab-build dist version ## Run every local validation and build target
+
+rerun: clean all ## Clean generated files, then rerun the complete local validation path
+
+clean: confirm ## Remove generated validation, build, and Python cache output
+	rm -rf artifacts build dist .coverage .pytest_cache .ruff_cache qtop.egg-info
+	find . -type d -name __pycache__ -prune -exec rm -rf {} +
+	find . -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
 
 ci-deps: ## Install pinned CI Python dependencies
 	$(PIP) install -r requirements-ci.txt
@@ -73,7 +82,8 @@ lint: ruff-check fortifications ## Run dependency-light source and diff health c
 lint-fix: ## Auto-fix ruff lint issues where possible
 	$(PYTHON) -m ruff check --fix .
 
-format-check: ## Check the branch diff for whitespace errors
+format-check: ## Check ruff formatting and branch diff whitespace
+	$(PYTHON) -m ruff format --check .
 	git diff --check $(FORTIFY_BASE_REF)...HEAD
 
 format-fix: ## Auto-format Python files with ruff
