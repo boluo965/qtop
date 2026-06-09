@@ -34,7 +34,7 @@ import glob
 import tempfile
 import logging
 from ast import literal_eval
-from qtop_py.constants import SYSTEMCONFDIR, QTOPCONF_YAML, QTOP_LOGFILE, USERPATH, MAX_UNIX_ACCOUNTS, KEYPRESS_TIMEOUT, FALLBACK_TERMSIZE
+from qtop_py.constants import SYSTEMCONFDIR, QTOPCONF_YAML, QTOP_LOGFILE, USERPATH, KEYPRESS_TIMEOUT, FALLBACK_TERMSIZE
 from qtop_py import fileutils
 from qtop_py import utils
 from qtop_py.plugins import *  # noqa: F403  ## FIXME: this is a code-smell, because it can be tightened
@@ -48,6 +48,32 @@ from qtop_py import __version__
 import time
 
 here = sys.path[0]
+LONG_TAIL_USER_SYMBOL = "*"
+UNKNOWN_NODE_STATE_SYMBOL = "?"
+
+
+def _configured_separator(config):
+    separator = config.get("SEPARATOR", config.get("vertical_separator", "|"))
+    return separator.replace("'", "") if isinstance(separator, str) else separator
+
+
+def _reserved_user_symbols(config):
+    return set(
+        symbol
+        for symbol in (
+            config.get("non_existent_node_symbol", "#"),
+            _configured_separator(config),
+            "_",
+            LONG_TAIL_USER_SYMBOL,
+            UNKNOWN_NODE_STATE_SYMBOL,
+        )
+        if symbol
+    )
+
+
+def _available_possible_ids(config):
+    reserved_symbols = _reserved_user_symbols(config)
+    return [symbol for symbol in config["possible_ids"] if symbol not in reserved_symbols]
 
 
 # TODO make the following work with py files instead of qtop.colormap files
@@ -242,6 +268,7 @@ def load_yaml_config():
         config["remapping"] = list()
     for symbol in symbol_map:
         config["possible_ids"].append(symbol)
+    config["possible_ids"] = _available_possible_ids(config)
 
     _savepath = os.path.realpath(os.path.expandvars(config["savepath"]))
 
@@ -958,10 +985,10 @@ class WNOccupancy(object):
         self.core_user_map = self._calc_core_matrix(self.user_to_id, self.jobid_to_user_to_queue)
 
     def _create_account_jobs_table(self, user_to_id, account_jobs_table):
-        # TODO: unix account id needs to be recomputed at this point. fix.
-        for quintuplet, new_uid in zip(account_jobs_table, config["possible_ids"]):
+        for quintuplet in account_jobs_table:
             unix_account = quintuplet[4]
-            quintuplet[0] = user_to_id[unix_account] = utils.ColorStr(unix_account[0], color="Red_L") if config["fill_with_user_firstletter"] else utils.ColorStr(new_uid, color="Red_L")
+            userid = user_to_id.get(unix_account, utils.ColorStr(LONG_TAIL_USER_SYMBOL))
+            quintuplet[0] = user_to_id[unix_account] = utils.ColorStr(str(userid), color="Red_L")
 
         return account_jobs_table, user_to_id
 
@@ -1041,23 +1068,24 @@ class WNOccupancy(object):
 
     def _expand_useraccounts_symbols(self, config, user_list):
         """
-        In case there are more users than the sum number of all numbers and small/capital letters of the alphabet
+        Keep the configured symbol alphabet stable. Overflow users share the long-tail symbol.
         """
-        if len(user_list) > MAX_UNIX_ACCOUNTS:
-            for i in range(MAX_UNIX_ACCOUNTS, len(user_list) + MAX_UNIX_ACCOUNTS):
-                config["possible_ids"].append(str(i)[0])
         return config
 
     def _create_id_for_users(self, user_alljobs_sorted_lot):
         user_to_id = {}
+        possible_ids = _available_possible_ids(self.config)
+        reserved_symbols = _reserved_user_symbols(self.config)
         for id_, user_allcount in enumerate(user_alljobs_sorted_lot):
+            unix_account = user_allcount[0]
             if self.config["fill_with_user_firstletter"]:
-                user_to_id[user_allcount[0]] = utils.ColorStr(user_allcount[0][0])
-            elif len(self.config["possible_ids"]) > id_:
-                user_to_id[user_allcount[0]] = utils.ColorStr(self.config["possible_ids"][id_])
+                firstletter = unix_account[0] if unix_account else LONG_TAIL_USER_SYMBOL
+                userid = firstletter if firstletter not in reserved_symbols else LONG_TAIL_USER_SYMBOL
+                user_to_id[unix_account] = utils.ColorStr(userid)
+            elif len(possible_ids) > id_:
+                user_to_id[unix_account] = utils.ColorStr(possible_ids[id_])
             else:
-                # If there are more users than possible ids use # for all remaining users
-                user_to_id[user_allcount[0]] = utils.ColorStr("#")
+                user_to_id[unix_account] = utils.ColorStr(LONG_TAIL_USER_SYMBOL)
 
         return user_to_id
 
@@ -1083,6 +1111,7 @@ class WNOccupancy(object):
         # TODO: remove these from here
         pattern[self.config["non_existent_node_symbol"]] = "#"
         pattern["_"] = "_"
+        pattern[LONG_TAIL_USER_SYMBOL] = "account_not_colored"
         pattern[self.config["SEPARATOR"]] = "account_not_colored"
         return pattern
 

@@ -25,7 +25,7 @@ GENERATED_OR_BINARY = re.compile(
     r"\.(xz|lzma|gz|bin|dat|png|jpg|jpeg|gif|webp)$",
     re.IGNORECASE,
 )
-SKIP_DIRS = set([".git", ".tox", ".venv", "__pycache__", "artifacts", "build", "dist", "qtop.egg-info"])
+SKIP_DIRS = set([".git", ".tox", ".venv", "venv", "__pycache__", "artifacts", "build", "dist", "qtop.egg-info"])
 
 
 def run_git(args):

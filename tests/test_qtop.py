@@ -204,6 +204,101 @@ def test_display_user_accounts_pool_mappings_hides_totals_by_default(monkeypatch
     assert "[ T] Totals" not in output
 
 
+def test_available_possible_ids_filters_reserved_user_symbols():
+    config = {
+        "possible_ids": list("0#_*?1|"),
+        "non_existent_node_symbol": "#",
+        "SEPARATOR": "|",
+    }
+
+    assert qtop_module._available_possible_ids(config) == ["0", "1"]
+
+
+def test_user_symbols_use_asterisk_for_long_tail_users():
+    wns_occupancy = WNOccupancy.__new__(WNOccupancy)
+    wns_occupancy.config = {
+        "fill_with_user_firstletter": False,
+        "possible_ids": ["0", "#", "_", "*", "?", "1"],
+        "non_existent_node_symbol": "#",
+        "SEPARATOR": "|",
+    }
+
+    user_lot = [
+        ("alice", 4),
+        ("bob", 3),
+        ("charlie", 2),
+        ("dora", 1),
+    ]
+    user_to_id = wns_occupancy._create_id_for_users(user_lot)
+
+    assert [str(user_to_id[user]) for user, _ in user_lot] == ["0", "1", "*", "*"]
+
+
+def test_firstletter_user_symbols_do_not_reuse_reserved_markers():
+    wns_occupancy = WNOccupancy.__new__(WNOccupancy)
+    wns_occupancy.config = {
+        "fill_with_user_firstletter": True,
+        "possible_ids": ["0", "1"],
+        "non_existent_node_symbol": "#",
+        "SEPARATOR": "|",
+    }
+
+    user_lot = [
+        ("_hidden", 4),
+        ("#system", 3),
+        ("?unknown", 2),
+        ("*wildcard", 1),
+        ("alice", 1),
+    ]
+    user_to_id = wns_occupancy._create_id_for_users(user_lot)
+
+    assert str(user_to_id["_hidden"]) == "*"
+    assert str(user_to_id["#system"]) == "*"
+    assert str(user_to_id["?unknown"]) == "*"
+    assert str(user_to_id["*wildcard"]) == "*"
+    assert str(user_to_id["alice"]) == "a"
+
+
+def test_account_jobs_table_preserves_precomputed_user_symbols():
+    wns_occupancy = WNOccupancy.__new__(WNOccupancy)
+    user_to_id = {
+        "overflow": qtop_utils.ColorStr("*"),
+        "alice": qtop_utils.ColorStr("0"),
+    }
+    account_jobs_table = [
+        ["placeholder", 2, 0, 2, "overflow", 1],
+        ["placeholder", 1, 0, 1, "alice", 1],
+    ]
+
+    account_jobs_table, user_to_id = wns_occupancy._create_account_jobs_table(user_to_id, account_jobs_table)
+
+    assert str(account_jobs_table[0][0]) == "*"
+    assert account_jobs_table[0][0].color == "Red_L"
+    assert str(account_jobs_table[1][0]) == "0"
+    assert account_jobs_table[1][0].color == "Red_L"
+    assert str(user_to_id["overflow"]) == "*"
+
+
+def test_long_tail_symbol_is_not_colored_like_a_single_user():
+    wns_occupancy = WNOccupancy.__new__(WNOccupancy)
+    wns_occupancy.config = {
+        "non_existent_node_symbol": "#",
+        "SEPARATOR": "|",
+    }
+    wns_occupancy.account_jobs_table = [
+        [qtop_utils.ColorStr("0"), 1, 0, 1, "alice", 1],
+        [qtop_utils.ColorStr("*"), 1, 0, 1, "overflow", 1],
+    ]
+
+    pattern = wns_occupancy.make_pattern_out_of_mapping({"alice": "Red_L"})
+
+    assert pattern["0"] == "alice"
+    assert pattern["*"] == "account_not_colored"
+    assert pattern["#"] == "#"
+    assert pattern["_"] == "_"
+    assert pattern["|"] == "account_not_colored"
+
+
 @pytest.mark.parametrize(
     "cmdline_switch, env_var, config_file_batch_option, returned_scheduler",
     (

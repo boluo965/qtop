@@ -27,4 +27,9 @@ jobs:
         with:
           python-version: '3.12.3'
       - run: make ci-deps PYTHON=python
-      - run: make test PYTHON=python
+      - run: make github-ci PYTHON=python
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: sample-gate-manual-pytest
+          path: artifacts/sample-gate/
