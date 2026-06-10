@@ -83,7 +83,7 @@ lint-fix: ## Auto-fix ruff lint issues where possible
 	$(PYTHON) -m ruff check --fix .
 
 format-check: ## Check ruff formatting and branch diff whitespace
-	$(PYTHON) -m ruff format --check .
+	$(PYTHON) -m ruff format --check --diff .
 	git diff --check $(FORTIFY_BASE_REF)...HEAD
 
 format-fix: ## Auto-format Python files with ruff

@@ -111,7 +111,10 @@ make trace-export-validation TRACE_JSON_B64=/path/to/qtop_json.json.b64 TRACE_FU
 This target decodes `base64 -> gzip -> JSON`, rehydrates the exported qtop
 document, renders it locally, checks the account-symbol contract in both plain
 and colour-on output, checks that `-4` / `--accounttotals` adds the totals row,
-and writes generated artifacts under `artifacts/trace-export/`.
+checks the combined colour/account-totals rendering, and writes generated
+artifacts under `artifacts/trace-export/`, including
+`rendered-color-accounttotals.ans` and an ANSI-stripped
+`rendered-color-accounttotals.out`.
 
 Expected output rules for this branch:
 
@@ -157,7 +160,7 @@ The generated/binary path check is deliberately conservative because
 `make lint` keeps the dependency-light source and diff health checks available
 without installing Python packages, `make ruff-check` runs the repository's ruff
 configuration after `make ci-deps` has installed pinned CI dependencies, and
-`make format-check` runs `ruff format --check .` before checking whitespace
+`make format-check` runs `ruff format --check --diff .` before checking whitespace
 errors in the branch diff against the same `FORTIFY_BASE_REF`.
 
 ## Coverage roadmap

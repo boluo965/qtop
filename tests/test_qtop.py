@@ -13,9 +13,11 @@ import pytest
 import re
 import datetime
 import sys
+from pathlib import Path
+from types import SimpleNamespace
 from qtop_py import qtop as qtop_module
 from qtop_py import utils as qtop_utils
-from qtop_py.constants import LONG_TAIL_USER_SYMBOL, UNKNOWN_NODE_STATE_SYMBOL
+from qtop_py.constants import SYMBOL_LONG_TAIL_USER, SYMBOL_UNKNOWN_NODE_STATE
 from qtop_py.qtop import (
     WNOccupancy,
     decide_batch_system,
@@ -29,8 +31,6 @@ from qtop_py.qtop import (
 SYMBOL_NON_EXISTENT_NODE = "#"
 SYMBOL_SEPARATOR = "|"
 SYMBOL_UNUSED_CORE = "_"
-SYMBOL_LONG_TAIL_USER = LONG_TAIL_USER_SYMBOL
-SYMBOL_UNKNOWN_NODE_STATE = UNKNOWN_NODE_STATE_SYMBOL
 SYMBOL_POSSIBLE_IDS_WITH_RESERVED = [
     "0",
     SYMBOL_NON_EXISTENT_NODE,
@@ -237,6 +237,20 @@ def test_available_possible_ids_filters_reserved_user_symbols():
     config = user_symbol_config(possible_ids=SYMBOL_POSSIBLE_IDS_WITH_RESERVED)
 
     assert qtop_module._available_possible_ids(config) == ["0", "1"]
+
+
+def test_load_yaml_config_keeps_user_symbol_pool_bounded(monkeypatch, tmp_path):
+    monkeypatch.setattr(qtop_module, "QTOPPATH", str(Path(__file__).resolve().parents[1]), raising=False)
+    monkeypatch.setattr(qtop_module, "SYSTEMCONFDIR", str(tmp_path / "etc"))
+    monkeypatch.setattr(qtop_module, "USERPATH", str(tmp_path / "user"))
+    monkeypatch.setattr(qtop_module, "CURPATH", str(tmp_path), raising=False)
+    monkeypatch.setattr(qtop_module, "args", SimpleNamespace(CONFFILE=None), raising=False)
+    monkeypatch.setattr(qtop_module.fileutils, "mkdir_p", lambda path: None)
+
+    config, _, _ = qtop_module.load_yaml_config()
+
+    assert config["possible_ids"] == list("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
+    assert "}" not in config["possible_ids"]
 
 
 def test_user_symbols_use_asterisk_for_long_tail_users():

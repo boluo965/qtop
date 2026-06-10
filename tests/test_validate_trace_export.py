@@ -1,9 +1,11 @@
 import base64
 import gzip
 import json
+import sys
 
 import pytest
 
+import tools.validate_trace_export as validate_trace_export
 from tools.validate_trace_export import (
     account_symbols,
     load_exported_document,
@@ -67,3 +69,42 @@ def test_validate_rendered_account_symbols_rejects_reserved_symbols(reserved):
 
     with pytest.raises(ValueError, match="reserved symbols"):
         validate_rendered_account_symbols(rendered)
+
+
+def test_main_writes_colour_account_totals_artifacts(tmp_path, monkeypatch):
+    trace_path = tmp_path / "trace.json.b64"
+    trace_path.write_text("placeholder")
+    artifact_dir = tmp_path / "artifacts"
+
+    class Document(object):
+        worker_nodes = [{}]
+        jobs_dict = {"1": object()}
+        queues_dict = {"debug": object()}
+        total_running_jobs = 1
+        total_queued_jobs = 0
+
+    class WNOccupancy(object):
+        account_jobs_table = [["*", 1]]
+
+    def fake_render_document(document, show_account_totals=False, color="OFF"):
+        rendered = "[ *] t_anon_user_104   |   1      1      0 |     1 |"
+        if show_account_totals:
+            rendered += "\n[ T] Totals            |   1      1      0 |     1 |"
+        if color == "ON":
+            rendered = "\x1b[31m%s\x1b[0m" % rendered
+        return rendered, WNOccupancy()
+
+    monkeypatch.setattr(validate_trace_export, "load_exported_document", lambda path: Document())
+    monkeypatch.setattr(validate_trace_export, "render_document", fake_render_document)
+    monkeypatch.setattr(sys, "argv", ["validate_trace_export.py", str(trace_path), "--artifact-dir", str(artifact_dir)])
+
+    assert validate_trace_export.main() == 0
+
+    rendered_colour_totals = (artifact_dir / "rendered-color-accounttotals.ans").read_text()
+    rendered_plain_totals = (artifact_dir / "rendered-color-accounttotals.out").read_text()
+    summary = json.loads((artifact_dir / "summary.json").read_text())
+
+    assert "\x1b[" in rendered_colour_totals
+    assert "[ T] Totals" in rendered_plain_totals
+    assert summary["rendered_color_accounttotals_has_ansi"] is True
+    assert summary["color_accounttotals_symbols"] == ["*"]

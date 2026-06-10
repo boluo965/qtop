@@ -18,7 +18,7 @@
 import sys
 
 from operator import itemgetter
-from itertools import zip_longest, cycle, chain
+from itertools import zip_longest, cycle
 import subprocess
 import select
 import os
@@ -41,8 +41,8 @@ from qtop_py.constants import (
     USERPATH,
     KEYPRESS_TIMEOUT,
     FALLBACK_TERMSIZE,
-    LONG_TAIL_USER_SYMBOL,
-    UNKNOWN_NODE_STATE_SYMBOL,
+    SYMBOL_LONG_TAIL_USER,
+    SYMBOL_UNKNOWN_NODE_STATE,
 )
 from qtop_py import fileutils
 from qtop_py import utils
@@ -75,8 +75,8 @@ def _reserved_user_symbols(config):
             config.get("non_existent_node_symbol", "#"),
             _configured_separator(config),
             "_",
-            LONG_TAIL_USER_SYMBOL,
-            UNKNOWN_NODE_STATE_SYMBOL,
+            SYMBOL_LONG_TAIL_USER,
+            SYMBOL_UNKNOWN_NODE_STATE,
         )
         if symbol
     )
@@ -259,7 +259,6 @@ def load_yaml_config():
     logging.info("Updated main dictionary. Length: %s items" % len(config))
 
     config["possible_ids"] = list(config["possible_ids"])
-    symbol_map = dict([(chr(x), x) for x in chain(range(33, 48), range(58, 64), range(91, 96), range(123, 126))])
 
     if config["user_color_mappings"]:
         user_to_color = user_to_color_default.copy()
@@ -277,8 +276,6 @@ def load_yaml_config():
         pass
     else:
         config["remapping"] = list()
-    for symbol in symbol_map:
-        config["possible_ids"].append(symbol)
     config["possible_ids"] = _available_possible_ids(config)
 
     _savepath = os.path.realpath(os.path.expandvars(config["savepath"]))
@@ -987,7 +984,7 @@ class WNOccupancy(object):
     def _create_account_jobs_table(self, user_to_id, account_jobs_table):
         for quintuplet in account_jobs_table:
             unix_account = quintuplet[4]
-            userid = user_to_id.get(unix_account, utils.ColorStr(LONG_TAIL_USER_SYMBOL))
+            userid = user_to_id.get(unix_account, utils.ColorStr(SYMBOL_LONG_TAIL_USER))
             quintuplet[0] = user_to_id[unix_account] = utils.ColorStr(str(userid), color="Red_L")
 
         return account_jobs_table, user_to_id
@@ -1079,13 +1076,13 @@ class WNOccupancy(object):
         for id_, user_allcount in enumerate(user_alljobs_sorted_lot):
             unix_account = user_allcount[0]
             if self.config["fill_with_user_firstletter"]:
-                firstletter = unix_account[0] if unix_account else LONG_TAIL_USER_SYMBOL
-                userid = firstletter if firstletter not in reserved_symbols else LONG_TAIL_USER_SYMBOL
+                firstletter = unix_account[0] if unix_account else SYMBOL_LONG_TAIL_USER
+                userid = firstletter if firstletter not in reserved_symbols else SYMBOL_LONG_TAIL_USER
                 user_to_id[unix_account] = utils.ColorStr(userid)
             elif len(possible_ids) > id_:
                 user_to_id[unix_account] = utils.ColorStr(possible_ids[id_])
             else:
-                user_to_id[unix_account] = utils.ColorStr(LONG_TAIL_USER_SYMBOL)
+                user_to_id[unix_account] = utils.ColorStr(SYMBOL_LONG_TAIL_USER)
 
         return user_to_id
 
@@ -1111,7 +1108,7 @@ class WNOccupancy(object):
         # TODO: remove these from here
         pattern[self.config["non_existent_node_symbol"]] = "#"
         pattern["_"] = "_"
-        pattern[LONG_TAIL_USER_SYMBOL] = "account_not_colored"
+        pattern[SYMBOL_LONG_TAIL_USER] = "account_not_colored"
         pattern[self.config["SEPARATOR"]] = "account_not_colored"
         return pattern
 

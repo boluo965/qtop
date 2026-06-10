@@ -148,6 +148,9 @@ def rendered_account_symbols(rendered):
     for line in strip_ansi(rendered).splitlines():
         match = ACCOUNT_LINE_RE.match(line)
         if match:
+            account_name = match.group(2).strip()
+            if account_name == "Totals":
+                continue
             symbols.append(match.group(1))
     return symbols
 
@@ -187,13 +190,18 @@ def main():
     rendered, wns_occupancy = render_document(document)
     rendered_with_totals, _ = render_document(document, show_account_totals=True)
     rendered_color, wns_occupancy_color = render_document(document, color="ON")
+    rendered_color_with_totals, wns_occupancy_color_with_totals = render_document(document, show_account_totals=True, color="ON")
 
     symbols = account_symbols(wns_occupancy)
     validate_symbol_contract(symbols)
     validate_symbol_contract(account_symbols(wns_occupancy_color))
+    validate_symbol_contract(account_symbols(wns_occupancy_color_with_totals))
     validate_rendered_account_symbols(rendered_color)
+    validate_rendered_account_symbols(rendered_color_with_totals)
     if "[ T] Totals" not in rendered_with_totals:
         raise ValueError("-4/accounttotals rendering did not include the totals row")
+    if "[ T] Totals" not in strip_ansi(rendered_color_with_totals):
+        raise ValueError("-c ON -4 rendering did not include the totals row")
     if args.fullview:
         validate_fullview_summary(rendered, args.fullview)
 
@@ -203,6 +211,8 @@ def main():
     (artifact_dir / "rendered-accounttotals.out").write_text(rendered_with_totals)
     (artifact_dir / "rendered-color.ans").write_text(rendered_color)
     (artifact_dir / "rendered-color.out").write_text(strip_ansi(rendered_color))
+    (artifact_dir / "rendered-color-accounttotals.ans").write_text(rendered_color_with_totals)
+    (artifact_dir / "rendered-color-accounttotals.out").write_text(strip_ansi(rendered_color_with_totals))
     (artifact_dir / "summary.json").write_text(
         json.dumps(
             {
@@ -213,7 +223,9 @@ def main():
                 "total_queued_jobs": document.total_queued_jobs,
                 "account_symbols": sorted(set(symbols)),
                 "color_account_symbols": sorted(set(rendered_account_symbols(rendered_color))),
+                "color_accounttotals_symbols": sorted(set(rendered_account_symbols(rendered_color_with_totals))),
                 "rendered_color_has_ansi": "\x1b[" in rendered_color,
+                "rendered_color_accounttotals_has_ansi": "\x1b[" in rendered_color_with_totals,
             },
             indent=2,
             sort_keys=True,
