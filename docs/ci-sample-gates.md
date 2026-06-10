@@ -160,8 +160,9 @@ The generated/binary path check is deliberately conservative because
 `make lint` keeps the dependency-light source and diff health checks available
 without installing Python packages, `make ruff-check` runs the repository's ruff
 configuration after `make ci-deps` has installed pinned CI dependencies, and
-`make format-check` runs `ruff format --check --diff .` before checking whitespace
-errors in the branch diff against the same `FORTIFY_BASE_REF`.
+`make format-check` runs both `ruff format --check .` and
+`ruff format --check --diff .` before checking whitespace errors in the branch
+diff against the same `FORTIFY_BASE_REF`.
 
 ## Coverage roadmap
 

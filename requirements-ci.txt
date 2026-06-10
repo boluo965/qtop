@@ -8,7 +8,7 @@ pip==24.0
 pluggy==1.6.0
 pyproject-hooks==1.1.0
 pytest==8.2.2
-ruff==0.1.15
+ruff==0.15.15
 setuptools==78.1.1
 tomli==2.4.1
 typing-extensions==4.15.0
